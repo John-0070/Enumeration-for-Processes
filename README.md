@@ -4,39 +4,54 @@ A cross-platform process enumeration and inspection tool for low-level investiga
 
 ## Purpose
 
-This tool is not meant to replicate surface-level enumeration as seen with Sysinternals or standard utilities. Instead, it is designed for **deep process introspection**, pulling from **native APIs**, **undocumented system calls**, and **direct handle enumeration** to uncover details that higher-level tools often abstract or omit.
+This project is designed for **deep, low-level process introspection**, offering capabilities beyond what tools like Sysinternals provide. It interfaces directly with **native Windows APIs** and **undocumented NT kernel functions** to extract granular process, thread, module, handle, and memory information in ways that traditional tools abstract or obscure.
 
-It is especially useful for:
+Ideal for:
 
-- Threat hunting and malware triage
-- Advanced process forensics
-- Persistence and anomaly detection
-- Kernel object tracking
-- Research into OS-level behavior
+- Malware triage and red team tooling
+- Digital forensics and incident response (DFIR)
+- Advanced persistence and anomaly detection
+- Kernel object and handle tracking
+- Research into OS internals and execution behavior
 
-## Capabilities (Windows)
+## Key Features (Windows)
 
-- Full process listing via Toolhelp32
-- Thread and module inspection per PID
-- Open handle enumeration via `NtQuerySystemInformation` (SystemHandleInformation)
-- Privilege escalation to `SE_DEBUG_NAME` for system-wide analysis
-- User context extraction via `TOKEN_USER` and SID resolution
-- Memory profiling with working set/pagefile stats
-- CSV export for offline analysis
+- Full process listing via ToolHelp32
+- Module and thread enumeration by PID
+- Open handle enumeration via `NtQuerySystemInformation(SystemHandleInformation)`
+- Privilege escalation via `SE_DEBUG_NAME`
+- Export process info including memory usage and user context (SID) to CSV
+- Uses `TOKEN_USER`, `GetProcessMemoryInfo`, `EnumProcessModules`, and raw NTAPI
 
-## Why Not Sysinternals?
+## Why Not Use Sysinternals?
 
-Sysinternals offers powerful tooling for operational use, but often operates at a layer that obscures raw system state. This tool:
+Sysinternals is excellent for operational use but abstracts lower-level internals for usability. This tool goes deeper:
 
-- Interfaces directly with **NTAPI** for handle and object access
-- Provides **unfiltered low-level data structures**
-- Enables deeper enumeration in scenarios where standard tools are blocked, sandboxed, or restricted
-- Is **open-source and extendable**, supporting research and red team adaptation
+- Direct use of `ntdll.dll` and undocumented structures
+- Native access to kernel-level handle/object structures
+- Unfiltered data dump for use in red team automation, malware analysis, or memory forensics
+- Open-source and modifiable for tailored research environments
+
+## Code Design and Analysis
+
+This project emphasizes **clarity, extensibility, and low-level correctness**:
+
+- Uses **dynamic memory scaling** for querying system handle tables (with room for optimization)
+- All enumeration functions operate independently and provide clean diagnostic output
+- Integrates full token privilege manipulation for debugging and introspection capabilities
+- Capable of revealing data from protected processes if permissions allow
+- Includes thread creation timestamps and memory metrics for profiling
+
+Areas for Future Improvement:
+- More robust memory reallocation strategies in `NtQuerySystemInformation`
+- Smarter error handling and handle cleanup
+- Modular breakdown for OS abstraction (Linux/macOS support planned)
+- Potential for multithreaded per-process enumeration for scale
 
 ## Roadmap
 
-- [x] Windows support via WinAPI and NTAPI
-- [ ] Linux support using `/proc`, `ptrace`, and `syscall`
-- [ ] macOS support via `sysctl`, `libproc`, and task inspection APIs
-- [ ] Abstracted cross-platform interface
-- [ ] Plugin system for custom enum modules (e.g., registry keys, hooks)
+- [x] Initial Windows implementation
+- [ ] Linux support via `/proc`, `ptrace`, and `syscalls`
+- [ ] macOS support via `libproc`, `task_for_pid`, `sysctl`
+- [ ] Abstract platform-independent interface
+- [ ] Plugin support for extended inspections (hooks, registry, memory)
